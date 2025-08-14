@@ -19,6 +19,13 @@ class MiraRAGConfig:
     embedding_dim: int = 512  # <-- 新增: 嵌入维度，对多头至关重要
     dense_top_n: int = 5  # 稠密召回的候选数量
 
+    reranker_model_path: str = "BAAI/bge-reranker-base"
+    use_reranker: bool = True
+    rerank_top_n: int = 50 # Re-ranker 从召回结果中取前N个进行重排，并输出这N个的排序
+
+
+
+
     use_hybrid_serch: bool = True
     bm25_weight: float = 0.3
     colbert_weight: float = 0.9
@@ -156,7 +163,13 @@ class MiraRAGRetriever:
             raise ValueError(
                 f"embedding_dim ({config.embedding_dim}) 必须能被 num_heads ({config.num_heads}) 整除。"
             )
-
+        self.reranker = None
+        if self.config.use_reranker:
+            print(f"正在加载 Re-ranker 模型: {config.reranker_model_path}...")
+            # bge-reranker 也用 FlagModel 加载，但用法不同
+            # 注意：reranker 不需要归一化
+            self.reranker = FlagModel(config.reranker_model_path, use_fp16=True if device.type == 'cuda' else False)
+            print("Re-ranker 模型加载完成。")
         self.encoder = SimpleEncoder(model_path=config.bge_model_path)
         # BM25(稀疏)索引
         self.documents: Dict[int, str] = {}  # 这里的文档ID对应子文档ID
@@ -335,6 +348,41 @@ class MiraRAGRetriever:
         print("状态更新完成。")
         return state
     
+    # 在你的引擎类中
+    def _rerank_with_bge(self, query: str, candidate_pids: List[int], bm25_all_scores: np.ndarray) -> List[int]:
+        """
+        使用 BGE-ReRanker 对候选集进行轻量重排。
+        """
+        print(f"从 {len(candidate_pids)} 个召回结果中，取前 {self.config.rerank_top_n} 个进行BGE重排...")
+        
+        # 1. 为了获取一个初始排序，我们先用BM25分数给所有候选排个序
+        # 这一步确保我们把最可能相关的文档送给reranker
+        bm25_scores_map = {self.bm25_id_map.get(i): score for i, score in enumerate(bm25_all_scores)}
+        sorted_candidates = sorted(candidate_pids, key=lambda pid: bm25_scores_map.get(pid, 0.0), reverse=True)
+        
+        # 2. 截取前 rerank_top_n 个送入 reranker
+        pids_to_rerank = sorted_candidates[:self.config.rerank_top_n]
+        if not pids_to_rerank:
+            return []
+            
+        texts_to_rerank = [self.documents[pid]['sub_chunk_text'] for pid in pids_to_rerank]
+
+        # 3. 准备输入并调用 reranker 计算分数
+        # reranker 输入格式是 [(query, doc1), (query, doc2), ...]
+        rerank_input_pairs = [[query, text] for text in texts_to_rerank]
+        rerank_scores = self.bge_reranker.compute_score(rerank_input_pairs, batch_size=self.config.encode_batch_size)
+        
+        # 4. 根据 reranker 的分数对这批ID进行重新排序
+        reranked_pairs = sorted(zip(pids_to_rerank, rerank_scores), key=lambda x: x[1], reverse=True)
+        
+        # 5. 提取排序后的ID列表作为“净化”后的候选集返回
+        final_reranked_pids = [pid for pid, score in reranked_pairs]
+        print(f"BGE重排完成，生成 {len(final_reranked_pids)} 个高质量候选送入下一阶段。")
+        
+        return final_reranked_pids
+
+
+
     # 在 AdvancedZipperQueryEngineV5 类中
     def _rerank_with_colbert(self, query: str, final_candidate_pids: List[int], bm25_all_scores: np.ndarray, state: Optional[ZipperV3State] = None) -> List[Tuple[int, float, str]]:
         """使用ColBERT进行精排。"""
@@ -431,59 +479,66 @@ class MiraRAGRetriever:
             
         return reranked_results
 
+    # 在你的引擎类中
     def retrieve(self, query: str, state: Optional[ZipperV3State] = None) -> List[Tuple[int, float, str]]:
         """
-        统一的检索入口。执行多路召回，然后根据配置分发给不同的精排器。
+        统一的检索入口。执行多路召回，可选地进行BGE重排，然后根据配置分发给最终精排器。
         """
-        if not self.config.use_colbert_rerank:
-            print(f"\n开始检索：'{query}' (跳过ColBERT精排)")
-            self.config.reranker_type = 'none'
-        else:
-            print(f"\n开始检索：'{query}' (使用 '{self.config.reranker_type}' 精排器)")
+        # --- 步骤 0: 打印日志 ---
+        reranker_info = "BGE-Reranker" if self.config.use_bge_reranker else "无"
+        final_reranker = self.config.reranker_type if self.config.use_colbert_rerank else "无"
+        print(f"\n开始检索: '{query}' (中间重排: {reranker_info}, 最终精排: {final_reranker})")
         
-        # --- 步骤 1: 多路召回 (此部分逻辑保持统一和默认) ---
+        # --- 步骤 1: 多路召回 (逻辑不变) ---
+        # ... (你现有的BM25和Dense召回逻辑，最终得到 final_candidate_pids 列表) ...
         query_tokens = self.encoder.tokenize(query)
         bm25_all_scores = self.bm25_index.get_scores(query_tokens)
         bm25_candidate_indices = np.argsort(bm25_all_scores)[::-1][:self.config.bm25_top_n]
-        final_candidate_pids = {self.bm25_id_map[idx] for idx in bm25_candidate_indices}
+        candidate_pids = {self.bm25_id_map.get(idx) for idx in bm25_candidate_indices if self.bm25_id_map.get(idx) is not None}
 
         if self.config.multi_channel_recall:
             query_sentence_emb = self.encoder.encode_sentence(query)
             dense_scores = torch.matmul(query_sentence_emb, self.doc_sentence_embeddings.T)
             dense_candidate_indices = torch.topk(dense_scores, k=self.config.dense_top_n).indices
             dense_pids = {self.dense_id_map[idx.item()] for idx in dense_candidate_indices}
-            final_candidate_pids.update(dense_pids)
+            candidate_pids.update(dense_pids)
         
-        final_candidate_pids = list(final_candidate_pids)
-        if not final_candidate_pids:
+        if not candidate_pids:
             return []
-        
-        # --- 步骤 2: 根据配置分发到不同的精排器 ---
+
+        # --- 新增步骤 2: (可选的) BGE 轻量重排 ---
+        if self.config.use_bge_reranker and self.bge_reranker:
+            # 调用BGE重排方法，对候选集进行“净化”
+            pids_for_final_rerank = self._rerank_with_bge(query, list(candidate_pids), bm25_all_scores)
+        else:
+            # 如果不使用BGE，则直接将召回结果送去最终精排
+            pids_for_final_rerank = list(candidate_pids)
+
+        if not pids_for_final_rerank:
+            return []
+
+        # --- 步骤 3: 根据配置分发到不同的最终精排器 ---
+        # 注意：现在所有精排器处理的都是 pids_for_final_rerank
         if not self.config.use_colbert_rerank:
-            print(f"跳过精排，共 {len(final_candidate_pids)} 个候选，仅使用BM25分数排序...")
-            bm25_scores_map = {self.bm25_id_map[i]: score for i, score in enumerate(bm25_all_scores)}
+            print(f"跳过最终精排，共 {len(pids_for_final_rerank)} 个候选，仅使用BM25分数排序...")
+            bm25_scores_map = {self.bm25_id_map.get(i): score for i, score in enumerate(bm25_all_scores)}
             final_results = [
                 (pid, bm25_scores_map.get(pid, 0.0),
                 self.documents[pid]['sub_chunk_text'],
-                self.documents[pid]['parent_chunk_text']
-            ) for pid in final_candidate_pids]
+                self.documents[pid].get('parent_chunk_text', '')) # 使用.get增加健壮性
+            for pid in pids_for_final_rerank]
+            
         elif self.config.reranker_type == 'colbert':
-            final_results = self._rerank_with_colbert(query, final_candidate_pids, bm25_all_scores, state)
+            final_results = self._rerank_with_colbert(query, pids_for_final_rerank, bm25_all_scores, state)
         
         elif self.config.reranker_type == 'mamba':
-            final_results = self._rerank_with_mamba_style(query, final_candidate_pids, bm25_all_scores)
-            bm25_scores_map = {self.bm25_id_map[i]: score for i, score in enumerate(bm25_all_scores)}
-            final_results = [
-                (pid, bm25_scores_map.get(pid, 0.0),
-                self.documents[pid]['sub_chunk_text'],
-                self.documents[pid]['parent_chunk_text']
-            ) for pid in final_candidate_pids]
+            # 假设Mamba精排器也已实现
+            final_results = self._rerank_with_mamba_style(query, pids_for_final_rerank, bm25_all_scores)
             
         else:
             raise ValueError(f"未知的精排器类型: {self.config.reranker_type}")
 
-        # --- 步骤 3: 最终排序和返回 ---
-        # 确保所有结果都是四元组
+        # --- 步骤 4: 最终排序和返回 ---
         final_results.sort(key=lambda x: x[1], reverse=True)
         return final_results[:self.config.final_top_k]
 

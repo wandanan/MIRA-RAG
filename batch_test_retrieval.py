@@ -150,7 +150,7 @@ def main():
     base_config = load_config("config.yml")
 
     # test_set_path = base_config['data'].get('test_set_path', 'data/novel_test_cases_full.json')
-    test_set_path = r'D:\Small_APP\MIRA-RAG\data\novel_test_cases_full.json'
+    test_set_path = r'data/novel_test_cases_full.json'
     test_set = load_test_set(test_set_path)
     results_dir = base_config['data'].get('results_dir', 'results')
     if not os.path.exists(results_dir):
@@ -183,6 +183,7 @@ def main():
         if not base_config['retriever']['use_colbert_rerank']:
             scenario_name = '仅召回'
 
+        print(f"final_top_k:{base_config['retriever']['final_top_k']}")
         print(f"\n--- {scenario_name} 测试结果 ---")
         print(f"  - 总命中率 (Total Hit Rate): {evaluation_metrics['total_hit_rate']:.2%}")
         print(f"    - 子文档命中率 (Sub-Chunk Hit): {evaluation_metrics['sub_hit_rate']:.2%}")
@@ -193,8 +194,8 @@ def main():
 
     print("\n\n===== 所有测试模式评估完成 =====")
     print("最终结果对比:")
-    for name, metrics in all_results.items():
-        print(f"\n  模式: {name}")
+    for scenario_name, metrics in all_results.items():
+        print(f"\n  模式: {scenario_name}")
         print(f"    - 总命中率: {metrics['total_hit_rate']:.2%}")
         print(f"      (其中，子文档直接命中: {metrics['sub_hit_rate']:.2%}, 父文档补充命中: {metrics['parent_hit_rate']:.2%})")
         print(f"      平均文档长度 - 子文档: {metrics['avg_sub_chars']:.0f} 字符, 父文档: {metrics['avg_parent_chars']:.0f} 字符")

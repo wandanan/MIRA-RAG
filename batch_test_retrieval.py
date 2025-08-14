@@ -21,7 +21,7 @@ def load_test_set(test_set_path: str) -> List[Dict]:
     with open(test_set_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-def check_hit_levels(retrieved_contexts: List[Tuple[int, float, str, str]], keywords: List[str]) -> HitStatus:
+def check_hit_levels(retrieved_contexts: List[Tuple[int, float, str, str]], keywords: List[str]) -> Tuple[HitStatus, int, int]:
     """
     分层检查命中情况：先检查子文档，再检查父文档。
     
@@ -38,16 +38,23 @@ def check_hit_levels(retrieved_contexts: List[Tuple[int, float, str, str]], keyw
     # 1. 优先检查子文档
     for keyword in keywords:
         if keyword in sub_context_text:
-            return "SUB_HIT"
+            sub_char_count = sum(len(ctx[2]) for ctx in retrieved_contexts)
+            parent_char_count = sum(len(ctx[3]) for ctx in retrieved_contexts)
+            return "SUB_HIT", sub_char_count, parent_char_count
             
     # 2. 如果子文档未命中，再检查父文档
     parent_context_text = " ".join([ctx[3] for ctx in retrieved_contexts])
     for keyword in keywords:
         if keyword in parent_context_text:
-            return "PARENT_HIT"
+            sub_char_count = sum(len(ctx[2]) for ctx in retrieved_contexts)
+            parent_char_count = sum(len(ctx[3]) for ctx in retrieved_contexts)
+            return "PARENT_HIT", sub_char_count, parent_char_count
             
     # 3. 如果都未命中
-    return "MISS"
+    # 计算子文档和父文档的总字符数
+    sub_char_count = sum(len(ctx[2]) for ctx in retrieved_contexts)
+    parent_char_count = sum(len(ctx[3]) for ctx in retrieved_contexts)
+    return "MISS", sub_char_count, parent_char_count
 
 def run_retrieval_test(config_dict: Dict[str, Any], test_set: List[Dict], output_path: str) -> Dict[str, float]:
     """
@@ -73,6 +80,8 @@ def run_retrieval_test(config_dict: Dict[str, Any], test_set: List[Dict], output
     print("\n--- [2/3] 开始执行检索评估 ---")
     detailed_results = []
     hit_counts = {"SUB_HIT": 0, "PARENT_HIT": 0, "MISS": 0}
+    total_sub_chars = 0
+    total_parent_chars = 0
     
     test_iterator = tqdm(test_set, desc="  - 正在测试", unit="query")
     
@@ -87,14 +96,18 @@ def run_retrieval_test(config_dict: Dict[str, Any], test_set: List[Dict], output
             query = str(query)
         
         retrieved_contexts = retriever.retrieve(query)
-        hit_status = check_hit_levels(retrieved_contexts, keywords)
+        hit_status, sub_char_count, parent_char_count = check_hit_levels(retrieved_contexts, keywords)
         
         hit_counts[hit_status] += 1
+        total_sub_chars += sub_char_count
+        total_parent_chars += parent_char_count
 
         detailed_results.append({
             "query": query,
             "expected_keywords": ", ".join(keywords),
-            "hit_status": hit_status
+            "hit_status": hit_status,
+            "sub_chars": sub_char_count,
+            "parent_chars": parent_char_count
         })
     
     end_time = time.time()
@@ -114,7 +127,7 @@ def run_retrieval_test(config_dict: Dict[str, Any], test_set: List[Dict], output
     print(f"\n--- [3/3] 保存测试结果 ---")
     print(f"  - 正在将详细结果保存到: {output_path}")
     with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ['query', 'expected_keywords', 'hit_status']
+        fieldnames = ['query', 'expected_keywords', 'hit_status', 'sub_chars', 'parent_chars']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(detailed_results)
@@ -124,7 +137,9 @@ def run_retrieval_test(config_dict: Dict[str, Any], test_set: List[Dict], output
         "total_hit_rate": total_hit_rate,
         "sub_hit_rate": sub_hit_rate,
         "parent_hit_rate": parent_hit_rate,
-        "miss_rate": hit_counts["MISS"] / total_count
+        "miss_rate": hit_counts["MISS"] / total_count,
+        "avg_sub_chars": total_sub_chars / total_count if total_count > 0 else 0,
+        "avg_parent_chars": total_parent_chars / total_count if total_count > 0 else 0
     }
 
 def main():
@@ -173,6 +188,8 @@ def main():
         print(f"    - 子文档命中率 (Sub-Chunk Hit): {evaluation_metrics['sub_hit_rate']:.2%}")
         print(f"    - 父文档命中率 (Parent-Chunk Hit): {evaluation_metrics['parent_hit_rate']:.2%}")
         print(f"  - 未命中率 (Miss Rate): {evaluation_metrics['miss_rate']:.2%}")
+        print(f"  - 平均子文档字符数: {evaluation_metrics['avg_sub_chars']:.0f}")
+        print(f"  - 平均父文档字符数: {evaluation_metrics['avg_parent_chars']:.0f}")
 
     print("\n\n===== 所有测试模式评估完成 =====")
     print("最终结果对比:")
@@ -180,6 +197,7 @@ def main():
         print(f"\n  模式: {name}")
         print(f"    - 总命中率: {metrics['total_hit_rate']:.2%}")
         print(f"      (其中，子文档直接命中: {metrics['sub_hit_rate']:.2%}, 父文档补充命中: {metrics['parent_hit_rate']:.2%})")
+        print(f"      平均文档长度 - 子文档: {metrics['avg_sub_chars']:.0f} 字符, 父文档: {metrics['avg_parent_chars']:.0f} 字符")
     
     print("\n评估结果的详细信息已保存到 'results' 文件夹中。")
 

@@ -129,9 +129,11 @@ def run_retrieval_test(config_dict: Dict[str, Any], test_set: List[Dict], output
 
 def main():
     """主测试脚本"""
+
     print("===== 开始批量检索模式评估 (分层命中分析) =====")
     
     base_config = load_config("config.yml")
+
     # test_set_path = base_config['data'].get('test_set_path', 'data/novel_test_cases_full.json')
     test_set_path = r'D:\Small_APP\MIRA-RAG\data\novel_test_cases_full.json'
     test_set = load_test_set(test_set_path)
@@ -163,7 +165,9 @@ def main():
         
         evaluation_metrics = run_retrieval_test(current_config, test_set, output_path)
         all_results[scenario_name] = evaluation_metrics
-        
+        if not base_config['retriever']['use_colbert_rerank']:
+            scenario_name = '仅召回'
+
         print(f"\n--- {scenario_name} 测试结果 ---")
         print(f"  - 总命中率 (Total Hit Rate): {evaluation_metrics['total_hit_rate']:.2%}")
         print(f"    - 子文档命中率 (Sub-Chunk Hit): {evaluation_metrics['sub_hit_rate']:.2%}")

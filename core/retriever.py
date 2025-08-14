@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from typing import List, Tuple, Dict, Optional
@@ -16,12 +17,13 @@ class MiraRAGConfig:
     final_top_k: int = 10
     use_multi_head: bool = True   # <-- 开启多头
     num_heads: int = 8  
+    multi_head_type: str = 'projected'  # 可选 'split' 或 'projected'
     embedding_dim: int = 512  # <-- 新增: 嵌入维度，对多头至关重要
     dense_top_n: int = 5  # 稠密召回的候选数量
 
-    reranker_model_path: str = "BAAI/bge-reranker-base"
-    use_reranker: bool = True
-    rerank_top_n: int = 50 # Re-ranker 从召回结果中取前N个进行重排，并输出这N个的排序
+    use_bge_reranker: bool = False  # <--- 这是唯一的开关名
+    bge_reranker_model_path: str = "BAAI/bge-reranker-v2-m3"
+    rerank_top_n: int = 100
 
 
 
@@ -153,23 +155,51 @@ class SimpleEncoder:
         
         return all_token_embeddings
 
-class MiraRAGRetriever:
+class MiraRAGRetriever(nn.Module):
     def __init__(self, config: MiraRAGConfig):
+        super().__init__() # <-- 必须调用父类的构造函数
         print("初始化 MIRA-RAG 检索引擎...")
         self.config = config
         #self.encoder = SimpleEncoder(model_path=config.bge_model_path)
                 # --- 新增: 多头维度检查 ---
-        if config.use_multi_head and config.embedding_dim % config.num_heads != 0:
+        self.query_projections = None
+        self.doc_projections = None
+        if config.use_multi_head and config.multi_head_type == 'projected':
+
+            print("创建变换式多头的线性投影层...")
+            head_dim = config.embedding_dim // config.num_heads
+            # 使用 ModuleList 来管理多个线性层
+            self.query_projections = nn.ModuleList([
+                nn.Linear(config.embedding_dim, head_dim, bias=False) for _ in range(config.num_heads)
+            ])
+            self.doc_projections = nn.ModuleList([
+                nn.Linear(config.embedding_dim, head_dim, bias=False) for _ in range(config.num_heads)
+            ])
+            # 将这些新创建的层移动到正确的设备
+            self.to(device)
             raise ValueError(
                 f"embedding_dim ({config.embedding_dim}) 必须能被 num_heads ({config.num_heads}) 整除。"
             )
-        self.reranker = None
-        if self.config.use_reranker:
-            print(f"正在加载 Re-ranker 模型: {config.reranker_model_path}...")
-            # bge-reranker 也用 FlagModel 加载，但用法不同
-            # 注意：reranker 不需要归一化
-            self.reranker = FlagModel(config.reranker_model_path, use_fp16=True if device.type == 'cuda' else False)
-            print("Re-ranker 模型加载完成。")
+        self.bge_reranker = None
+        if config.use_bge_reranker:
+            print(f"正在加载 BGE-ReRanker 模型: {config.bge_reranker_model_path}...")
+            try:
+                # --- 核心修正: 从 FlagEmbedding 导入正确的类 ---
+                from FlagEmbedding import FlagReranker 
+                
+                # --- 使用 FlagReranker 类来实例化 ---
+                self.bge_reranker = FlagReranker(
+                    config.bge_reranker_model_path, 
+                    use_fp16=True if torch.cuda.is_available() else False # 在CPU上禁用fp16
+                )
+                print("BGE-ReRanker 模型加载完成。")
+                
+            except ImportError:
+                print("警告: 未安装 FlagEmbedding 或版本过低，BGE-ReRanker 将被禁用。")
+                self.config.use_bge_reranker = False
+            except Exception as e:
+                print(f"错误: 加载 BGE-ReRanker 模型失败: {e}")
+                self.config.use_bge_reranker = False
         self.encoder = SimpleEncoder(model_path=config.bge_model_path)
         # BM25(稀疏)索引
         self.documents: Dict[int, str] = {}  # 这里的文档ID对应子文档ID
@@ -277,42 +307,44 @@ class MiraRAGRetriever:
         if query_emb.nelement() == 0 or doc_emb.nelement() == 0:
             return 0.0
 
-        # --- 多头逻辑 ---
+        score = 0.0
         if self.config.use_multi_head:
-            # print(f"多头查询模式")
-            # 1. 获取维度信息
+            # --- 分支一: 变换式多头 (Projected Multi-Head) ---
+            if self.config.multi_head_type == 'projected':
+                total_score = 0.0
+                for i in range(self.config.num_heads):
+                    # 将完整的原始向量进行投影
+                    q_head = self.query_projections[i](query_emb)
+                    d_head = self.doc_projections[i](doc_emb)
+                    
+                    # 在投影后的子空间中计算相似度
+                    sim_matrix_head = F.cosine_similarity(q_head.unsqueeze(1), d_head.unsqueeze(0), dim=-1)
+                    score_head = sim_matrix_head.max(dim=1).values.sum().item()
+                    total_score += score_head
+                score = total_score
+
+        # --- 分支二: 切分式多头 (Split Multi-Head) ---
+        elif self.config.multi_head_type == 'split':
             num_query_tokens, q_dim = query_emb.shape
             num_doc_tokens, d_dim = doc_emb.shape
             num_heads = self.config.num_heads
             head_dim = self.config.embedding_dim // num_heads
 
-            # 2. 安全检查：如果实际维度与配置不符，则回退到单头模式
             if q_dim != self.config.embedding_dim or d_dim != self.config.embedding_dim:
-                # 这是一个安全网，防止因模型输出维度与配置不符导致崩溃
-                print(f"警告: Token维度({q_dim}/{d_dim})与配置({self.config.embedding_dim})不符，回退到单头计算。")
-                # 执行原来的单头逻辑
+                print(f"警告: Token维度与配置不符，回退到单头计算。")
                 sim_matrix = F.cosine_similarity(query_emb.unsqueeze(1), doc_emb.unsqueeze(0), dim=-1)
                 score = sim_matrix.max(dim=1).values.sum().item()
             else:
-                # 3. 变形 (Reshape)
-                # [num_tokens, embedding_dim] -> [num_tokens, num_heads, head_dim]
                 query_heads = query_emb.view(num_query_tokens, num_heads, head_dim)
                 doc_heads = doc_emb.view(num_doc_tokens, num_heads, head_dim)
-
                 total_score = 0.0
-                # 4. 循环计算每个头的分数
                 for i in range(num_heads):
-                    # 取出当前头的所有token向量
                     q_head = query_heads[:, i, :]
                     d_head = doc_heads[:, i, :]
-                    
-                    # 在当前头内部执行 MaxSim + Sum
                     sim_matrix_head = F.cosine_similarity(q_head.unsqueeze(1), d_head.unsqueeze(0), dim=-1)
                     score_head = sim_matrix_head.max(dim=1).values.sum().item()
                     total_score += score_head
-                
                 score = total_score
-
         # --- 单头逻辑 (如果多头关闭) ---
         else:
             # print(f'单头查询模式...')
@@ -349,38 +381,42 @@ class MiraRAGRetriever:
         return state
     
     # 在你的引擎类中
+# 在你的引擎类中
+# 在你的引擎类中
     def _rerank_with_bge(self, query: str, candidate_pids: List[int], bm25_all_scores: np.ndarray) -> List[int]:
         """
         使用 BGE-ReRanker 对候选集进行轻量重排。
         """
         print(f"从 {len(candidate_pids)} 个召回结果中，取前 {self.config.rerank_top_n} 个进行BGE重排...")
         
-        # 1. 为了获取一个初始排序，我们先用BM25分数给所有候选排个序
-        # 这一步确保我们把最可能相关的文档送给reranker
+        # 1. 获取初步排序的候选
         bm25_scores_map = {self.bm25_id_map.get(i): score for i, score in enumerate(bm25_all_scores)}
         sorted_candidates = sorted(candidate_pids, key=lambda pid: bm25_scores_map.get(pid, 0.0), reverse=True)
-        
-        # 2. 截取前 rerank_top_n 个送入 reranker
         pids_to_rerank = sorted_candidates[:self.config.rerank_top_n]
         if not pids_to_rerank:
             return []
             
         texts_to_rerank = [self.documents[pid]['sub_chunk_text'] for pid in pids_to_rerank]
 
-        # 3. 准备输入并调用 reranker 计算分数
-        # reranker 输入格式是 [(query, doc1), (query, doc2), ...]
+        # 2. 准备输入
+        # compute_score 需要的输入格式是 [(query, doc1), (query, doc2), ...]
         rerank_input_pairs = [[query, text] for text in texts_to_rerank]
-        rerank_scores = self.bge_reranker.compute_score(rerank_input_pairs, batch_size=self.config.encode_batch_size)
+        print(f"调用BGE rerank，处理 {len(rerank_input_pairs)} 个 query-document 对...")
+
+        # --- 核心修正: 使用正确的方法名 compute_score ---
+        rerank_scores = self.bge_reranker.compute_score(
+            rerank_input_pairs, 
+            batch_size=self.config.encode_batch_size # 批量处理以提升效率
+        )
         
-        # 4. 根据 reranker 的分数对这批ID进行重新排序
+        # 3. 根据 reranker 的分数对ID进行重新排序
         reranked_pairs = sorted(zip(pids_to_rerank, rerank_scores), key=lambda x: x[1], reverse=True)
         
-        # 5. 提取排序后的ID列表作为“净化”后的候选集返回
+        # 4. 提取排序后的ID列表返回
         final_reranked_pids = [pid for pid, score in reranked_pairs]
         print(f"BGE重排完成，生成 {len(final_reranked_pids)} 个高质量候选送入下一阶段。")
         
         return final_reranked_pids
-
 
 
     # 在 AdvancedZipperQueryEngineV5 类中
@@ -505,7 +541,7 @@ class MiraRAGRetriever:
         
         if not candidate_pids:
             return []
-
+        pids_for_final_rerank = list(candidate_pids) 
         # --- 新增步骤 2: (可选的) BGE 轻量重排 ---
         if self.config.use_bge_reranker and self.bge_reranker:
             # 调用BGE重排方法，对候选集进行“净化”

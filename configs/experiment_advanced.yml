@@ -1,0 +1,33 @@
+# -----------------------------------
+# MIRA-RAG 高级实验配置示例
+# 此配置展示了不同的文档处理和检索参数设置
+# -----------------------------------
+
+# 数据路径配置
+data:
+  corpus_path: "data/corpus.txt"        # 知识库源文件路径
+  test_set_path: "data/test_set.json"   # 测试问答对文件路径
+  results_dir: "results/mira_rag_advanced_experiment"  # 高级实验结果目录
+
+# 模块1: 文档处理器配置 (更大的块大小和重叠)
+document_processor:
+  chunk_size: 512       # 更大的文本块大小
+  chunk_overlap: 100    # 更大的文本块重叠大小
+
+# 模块2: 检索器 (更严格的参数设置)
+retriever:
+  bge_model_path: "BAAI/bge-large-zh-v1.5"  # 使用更大的BGE模型
+  bm25_top_n: 10        # 增加BM25稀疏召回候选数量
+  dense_top_n: 10       # 增加稠密向量召回候选数量
+  final_top_k: 5        # 增加最终检索结果数量
+  multi_channel_recall: true  # 继续使用多路召回
+  bm25_weight: 0.2     # 降低BM25权重
+  colbert_weight: 0.8  # 增加ColBERT式重排权重
+  use_length_penalty: true  # 继续使用长度惩罚
+  length_penalty_alpha: 0.3  # 调整长度惩罚系数
+
+# 模块3: 生成器 (不同的模型和参数)
+generator:
+  api_key: "YOUR_API_KEY_HERE"  # API密钥
+  base_url: "https://api.example.com/v1"  # API基础URL
+  model_name: "gpt-3.5-turbo"  # 使用不同的LLM模型

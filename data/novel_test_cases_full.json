@@ -1,0 +1,338 @@
+[
+  {
+    "id": "A16",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元和阿狗逃跑时，是谁背着谁？",
+    "expected_answer_keywords": ["阿狗", "背着", "易书元"]
+  },
+  {
+    "id": "A17",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "在心理博弈中，易书元模仿谁的声线来威慑首领？",
+    "expected_answer_keywords": ["浑厚", "冰冷", "不是傻子的声音"]
+  },
+  {
+    "id": "A18",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "那群被称为“乌山八鬼”的恶人中，武功最强的人是谁？",
+    "expected_answer_keywords": ["被叼走", "一口被叼走"]
+  },
+  {
+    "id": "A19",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元传授给阿飞的心法叫什么名字？",
+    "expected_answer_keywords": ["清心诀"]
+  },
+  {
+    "id": "A20",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "阿飞的真名叫什么？",
+    "expected_answer_keywords": ["麦凌飞"]
+  },
+  {
+    "id": "A21",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元一行人看到写有“月州界元江县境”的界碑在什么山上？",
+    "expected_answer_keywords": ["阔南山"]
+  },
+  {
+    "id": "A22",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元的父亲和母亲的墓碑是谁立的？",
+    "expected_answer_keywords": ["易保康"]
+  },
+  {
+    "id": "A23",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元的弟弟易保康以前叫什么名字？",
+    "expected_answer_keywords": ["翰林", "易翰林"]
+  },
+  {
+    "id": "A24",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元失踪了多少年才回到家乡？",
+    "expected_answer_keywords": ["二十多年"]
+  },
+  {
+    "id": "A25",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "西河村的村民对阿飞最感兴趣的是什么？",
+    "expected_answer_keywords": ["江湖客", "武功"]
+  },
+  {
+    "id": "B16",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "描述一下首领与雪蟒搏斗并最终被杀的过程。",
+    "expected_answer_keywords": ["刀光", "鳞甲", "火星", "跃至山壁", "避过蛇口", "刺出一点血痕", "白尾甩来", "撞在石壁", "扑了过来"]
+  },
+  {
+    "id": "B17",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "易书元是如何说服阿狗，让他相信自己不会害他的？",
+    "expected_answer_keywords": ["你心有善念", "救命之恩", "不会害你", "良知能救自己一命"]
+  },
+  {
+    "id": "B18",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "阿飞向易书元展示武功时，具体做了哪些动作？",
+    "expected_answer_keywords": ["念着招式", "时而出拳", "扫去残雪", "一拳打在松树上"]
+  },
+  {
+    "id": "B19",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "易书元是如何引导阿飞练习“清心诀”的？",
+    "expected_answer_keywords": ["盘坐", "脊背挺直", "眼睛微闭", "调整气息", "出声助你"]
+  },
+  {
+    "id": "B20",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "易书元见到弟弟易保康时，两人重逢的场景是怎样的？",
+    "expected_answer_keywords": ["扛着麻绳", "愣住了", "眼泪止不住", "兄长", "二十多年", "你怎么都没变"]
+  },
+  {
+    "id": "B21",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "阿飞离开西河村时，做了什么来向村民和前辈展示自己？",
+    "expected_answer_keywords": ["飞跃而起", "借着屋舍草垛", "施展着拳法", "凌空而去", "掀起积雪"]
+  },
+  {
+    "id": "C16",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "在逃跑过程中，首领为什么一开始没有抛弃易书元和阿狗，而是徘徊在他们身边？",
+    "expected_answer_keywords": ["戒备", "阴险", "听劲", "身体状况不对劲", "心理博弈"]
+  },
+  {
+    "id": "C17",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "首领是如何脑补出“易书元也是为雪蟒蛇胆而来”这个结论的？",
+    "expected_answer_keywords": ["串联", "身体有恙", "龟息大法", "装傻充愣", "抢到蛇胆", "任其宰割"]
+  },
+  {
+    "id": "C18",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "易书元为什么在和首领对峙时，敢于假装高人进行心理博弈？",
+    "expected_answer_keywords": ["入戏", "观察力变得极其敏锐", "他紧张了", "按他的思维方式来"]
+  },
+  {
+    "id": "C19",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "为什么雪蟒在追击到山涧后就不再追了？",
+    "expected_answer_keywords": ["停下了", "守在那一片山里", "山涧", "分成两边"]
+  },
+  {
+    "id": "C20",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "阿飞为什么会误认为易书元传授的静心法门是“无上心法”？",
+    "expected_answer_keywords": ["蔚为神奇", "内气自发动", "心有所悟", "微弱的旋转", "前辈的声音仿佛直催入心"]
+  },
+  {
+    "id": "C21",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "阿飞练习清心诀后，心态和武学状态发生了哪些肉眼可见的变化？",
+    "expected_answer_keywords": ["活泼了", "自信了", "蜕变", "内气生生不息", "不同以往"]
+  },
+  {
+    "id": "C22",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "易书元在教阿飞清心诀时，内心真实的想法是怎样的？",
+    "expected_answer_keywords": ["死马当活马医", "忽悠", "安慰", "心态得崩", "不懂武功"]
+  },
+  {
+    "id": "C23",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "易书元看到父母的坟墓时，为什么会产生“庄周梦蝶”的感觉？",
+    "expected_answer_keywords": ["占据了身体", "痴儿魂飞他界", "另一段人生"]
+  },
+  {
+    "id": "C24",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "易保康见到兄长易书元时，为什么会惊讶于他“怎么都没变”？",
+    "expected_answer_keywords": ["老态憔悴头发花白", "满头青丝神庭饱满", "前者是弟后者是兄"]
+  },
+  {
+    "id": "C25",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "阿飞为什么在决定回家后，要郑重地向易书元磕头行大礼？",
+    "expected_answer_keywords": ["救我性命", "传我心法", "再生父母", "大恩大德"]
+  },
+  {
+    "id": "D16",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "总结阿飞这个角色的转变过程，从他与乌山八鬼在一起到最后离开西河村。",
+    "expected_answer_keywords": ["误入歧途", "胆小贪生", "良心未泯", "敞开心扉", "修习清心诀", "变得自信", "决定回家"]
+  },
+  {
+    "id": "D17",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "易书元运用了哪些现代知识或思维方式，帮助他在古代环境中生存下来？",
+    "expected_answer_keywords": ["心理博弈", "入戏", "说书口技", "冥想", "静心养性", "二十一世纪繁杂环境洗礼"]
+  },
+  {
+    "id": "D18",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "“气味”在第4章和第5章的情节中起到了什么关键作用？",
+    "expected_answer_keywords": ["怪蛇的气味", "相反方向跑", "指挥着阿狗", "又出现了", "越来越近"]
+  },
+  {
+    "id": "D19",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "易书元在哪些时刻表现出了对自身穿越处境的迷茫和恐惧？",
+    "expected_answer_keywords": ["到底来到了什么地方", "心中烦闷", "没有安全感", "恶梦", "坠河", "心慌"]
+  },
+  {
+    "id": "D20",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "“信任”是如何在易书元和阿飞之间逐步建立起来的？列出关键事件。",
+    "expected_answer_keywords": ["救下阿狗", "指挥逃跑", "敞开心扉", "传授清心诀", "不再防备"]
+  },
+  {
+    "id": "D21",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "易书元的外貌和年龄感是如何成为一个贯穿始终的谜团和讨论点的？",
+    "expected_answer_keywords": ["怎么都没变", "比保康还年轻", "到不了三十", "容颜难老", "逆反先天"]
+  },
+  {
+    "id": "E22",
+    "category": "反事实/假设性推理",
+    "difficulty": 5,
+    "query": "如果阿狗在篝火熄灭后没有选择救易书元，而是自己逃跑了，他的结局可能会是怎样？",
+    "expected_answer_keywords": ["首领", "雪蟒", "独自逃命", "没有方向"]
+  },
+  {
+    "id": "E23",
+    "category": "反事实/假设性推理",
+    "difficulty": 5,
+    "query": "如果首领在与易书元对峙时，没有选择妥协而是直接动手，最可能的结果是什么？",
+    "expected_answer_keywords": ["易书元没有武功", "阿狗会帮忙", "两败俱伤", "被雪蟒追上"]
+  },
+  {
+    "id": "E24",
+    "category": "反事实/假设性推理",
+    "difficulty": 5,
+    "query": "如果易书元没有教阿飞“清心诀”，阿飞还会决定回家吗？为什么？",
+    "expected_answer_keywords": ["不会", "会", "自卑", "心结", "找到自信", "触景生情"]
+  },
+  {
+    "id": "E25",
+    "category": "反事实/假设性推理",
+    "difficulty": 5,
+    "query": "如果在见到父母坟墓时，易书元没有继承原主的记忆和情感，他会如何向易保康解释自己的身份？",
+    "expected_answer_keywords": ["借尸还魂", "夺舍", "失忆", "无法解释", "被当成骗子"]
+  },
+  {
+    "id": "A26",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元和阿狗逃了一夜后，在哪里休息的？",
+    "expected_answer_keywords": ["山口", "大树底下"]
+  },
+  {
+    "id": "A27",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "阿飞的家传武功叫什么名字？",
+    "expected_answer_keywords": ["麦家拳"]
+  },
+  {
+    "id": "A28",
+    "category": "事实检索与细节定位",
+    "difficulty": 1,
+    "query": "易书元睡觉时做的噩梦内容是什么？",
+    "expected_answer_keywords": ["坠河", "流光", "被吸入水中"]
+  },
+  {
+    "id": "B22",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "阿飞是如何向易书元倾诉自己与乌山八鬼混在一起的经历的？",
+    "expected_answer_keywords": ["与家人矛盾", "出走", "误入歧途", "见死不救", "痛苦", "麻木"]
+  },
+  {
+    "id": "B23",
+    "category": "事件与过程描述",
+    "difficulty": 2,
+    "query": "易书元和阿飞在山中赶路时，是如何解决食物问题的？",
+    "expected_answer_keywords": ["馒头", "烤兔子", "取一些冰", "化开"]
+  },
+  {
+    "id": "C26",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "阿飞为什么在能自行修习清心诀后，会因为易书元不再慢走而感到失落？",
+    "expected_answer_keywords": ["人心不足蛇吞象", "贪心", "预感应验"]
+  },
+  {
+    "id": "C27",
+    "category": "角色动机与状态分析",
+    "difficulty": 3,
+    "query": "易书元为什么在听完阿飞讲述经历后，会建议他回家？",
+    "expected_answer_keywords": ["心地不坏", "痛苦", "不是不可调和的矛盾", "江湖很复杂"]
+  },
+  {
+    "id": "D22",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "“轻功”在这些章节中扮演了什么角色？列举其具体用途。",
+    "expected_answer_keywords": ["逃命", "背着人飞跃", "赶路", "展示武功"]
+  },
+  {
+    "id": "D23",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "易书元是如何从一个被怀疑的“傻子”转变为被阿飞和首领敬畏的“前辈”的？",
+    "expected_answer_keywords": ["指挥逃跑", "心理博弈", "假装高人", "引来雪蟒", "传授心法"]
+  },
+  {
+    "id": "D24",
+    "category": "跨章节/主题综合",
+    "difficulty": 4,
+    "query": "“家”这个概念在这些章节中是如何体现的？分别对易书元和阿飞意味着什么？",
+    "expected_answer_keywords": ["元江县西河村", "爹娘坟墓", "与家人矛盾", "回家去", "思乡情怯"]
+  },
+  {
+    "id": "E26",
+    "category": "反事实/假设性推理",
+    "difficulty": 5,
+    "query": "如果易书元没有做关于坠河的噩梦，他对自己穿越的根本原因会有所探究吗？",
+    "expected_answer_keywords": ["会", "不会", "流光", "关键线索", "只关注生存"]
+  },
+  {
+    "id": "E27",
+    "category": "反事实/假设性推理",
+    "difficulty": 5,
+    "query": "如果阿飞的资质真的非常差，清心诀对他完全没用，两人的关系会如何发展？",
+    "expected_answer_keywords": ["心态崩溃", "不再信任", "分道扬镳", "易书元会安慰他"]
+  }
+]

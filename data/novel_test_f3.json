@@ -1,0 +1,107 @@
+[
+    {
+      "id": "A01",
+      "category": "事实检索与细节定位",
+      "difficulty": 1,
+      "query": "易书元是在哪条河上坐船的？",
+      "expected_answer_keywords": ["堵河"]
+    },
+    {
+      "id": "A02",
+      "category": "事实检索与细节定位",
+      "difficulty": 1,
+      "query": "划船的大爷认为易书元是什么职业？",
+      "expected_answer_keywords": ["网红"]
+    },
+    {
+      "id": "A03",
+      "category": "事实检索与细节定位",
+      "difficulty": 1,
+      "query": "那群恶人想要捕捉的异兽叫什么名字？",
+      "expected_answer_keywords": ["雪蟒"]
+    },
+    {
+      "id": "A04",
+      "category": "事实检索与细节定位",
+      "difficulty": 1,
+      "query": "在废弃驿站里，是谁给易书元盛汤和馒头？",
+      "expected_answer_keywords": ["阿狗"]
+    },
+    {
+      "id": "A05",
+      "category": "事实检索与细节定位",
+      "difficulty": 1,
+      "query": "易书元坠河时，感觉撞到了什么东西？",
+      "expected_answer_keywords": ["冰"]
+    },
+    {
+      "id": "B06",
+      "category": "事件与过程描述",
+      "difficulty": 2,
+      "query": "易书元是如何从现代穿越到古代的？请描述整个过程。",
+      "expected_answer_keywords": ["桃花源记", "坠河", "撞到冰", "流光", "昏迷", "残雪"]
+    },
+    {
+      "id": "B07",
+      "category": "事件与过程描述",
+      "difficulty": 2,
+      "query": "雪蟒第一次攻击驿站时，是如何抓走一个人的？",
+      "expected_answer_keywords": ["悄无声息", "蛇头", "破口", "闪电般", "含住", "拖走"]
+    },
+    {
+      "id": "B08",
+      "category": "事件与过程描述",
+      "difficulty": 2,
+      "query": "那群恶人原本计划如何捕捉雪蟒？",
+      "expected_answer_keywords": ["活人", "诱饵", "饵", "吞了人", "跑不快", "制住"]
+    },
+    {
+      "id": "B09",
+      "category": "事件与过程描述",
+      "difficulty": 2,
+      "query": "易书元是如何在雪蟒第一次攻击中救下阿狗的？",
+      "expected_answer_keywords": ["拉", "拽", "手臂", "倾倒", "躲开"]
+    },
+    {
+      "id": "C10",
+      "category": "角色动机与状态分析",
+      "difficulty": 3,
+      "query": "易书元为什么在刚被救上岸后，喜悦感就无影无踪了？",
+      "expected_answer_keywords": ["奇装异服", "兵器", "凶神恶煞", "处境不妙"]
+    },
+    {
+      "id": "C11",
+      "category": "角色动机与状态分析",
+      "difficulty": 3,
+      "query": "为什么那群恶人在雪蟒出现后，会从猎人变成猎物？",
+      "expected_answer_keywords": ["体型巨大", "速度惊人", "超出预料", "恐惧"]
+    },
+    {
+      "id": "C12",
+      "category": "角色动机与状态分析",
+      "difficulty": 4,
+      "query": "在篝火熄灭后，那个被称为“大哥”的首领为什么选择留下来而不是第一时间逃跑？",
+      "expected_answer_keywords": ["阴险", "炮灰", "躲在暗处", "观察情况", "安全时机"]
+    },
+    {
+      "id": "C13",
+      "category": "角色动机与状态分析",
+      "difficulty": 3,
+      "query": "阿狗这个角色在这群恶人中有什么不同？",
+      "expected_answer_keywords": ["沉默寡言", "恐惧", "善意", "给食物", "背着逃跑"]
+    },
+    {
+      "id": "D14",
+      "category": "跨章节信息综合",
+      "difficulty": 4,
+      "query": "总结一下易书元刚穿越时面临的所有生存威胁。",
+      "expected_answer_keywords": ["溺水", "寒冷", "恶徒", "诱饵", "雪蟒", "怪物"]
+    },
+    {
+      "id": "D15",
+      "category": "跨章节信息综合",
+      "difficulty": 4,
+      "query": "从哪些细节可以判断出，易书元穿越后的世界不是现代社会？",
+      "expected_answer_keywords": ["奇装异服", "发髻", "冷兵器", "驿站", "皇帝", "没有现代化"]
+    }
+  ]

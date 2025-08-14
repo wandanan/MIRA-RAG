@@ -1,0 +1,24 @@
+# Core ML & Torch
+torch
+transformers
+
+# Embedding & Search
+FlagEmbedding
+rank_bm25
+
+# RAG Evaluation
+ragas
+datasets
+pandas
+
+# LLM Interaction
+openai
+
+# Utilities
+PyYAML
+streamlit
+
+# Development
+pytest
+black
+flake8

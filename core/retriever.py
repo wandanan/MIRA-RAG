@@ -435,7 +435,11 @@ class MiraRAGRetriever:
         """
         统一的检索入口。执行多路召回，然后根据配置分发给不同的精排器。
         """
-        print(f"\n开始检索：'{query}' (使用 '{self.config.reranker_type}' 精排器)")
+        if not self.config.use_colbert_rerank:
+            print(f"\n开始检索：'{query}' (跳过ColBERT精排)")
+            self.config.reranker_type = 'none'
+        else:
+            print(f"\n开始检索：'{query}' (使用 '{self.config.reranker_type}' 精排器)")
         
         # --- 步骤 1: 多路召回 (此部分逻辑保持统一和默认) ---
         query_tokens = self.encoder.tokenize(query)
@@ -455,14 +459,19 @@ class MiraRAGRetriever:
             return []
         
         # --- 步骤 2: 根据配置分发到不同的精排器 ---
-        if self.config.reranker_type == 'colbert':
+        if not self.config.use_colbert_rerank:
+            print(f"跳过精排，共 {len(final_candidate_pids)} 个候选，仅使用BM25分数排序...")
+            bm25_scores_map = {self.bm25_id_map[i]: score for i, score in enumerate(bm25_all_scores)}
+            final_results = [
+                (pid, bm25_scores_map.get(pid, 0.0),
+                self.documents[pid]['sub_chunk_text'],
+                self.documents[pid]['parent_chunk_text']
+            ) for pid in final_candidate_pids]
+        elif self.config.reranker_type == 'colbert':
             final_results = self._rerank_with_colbert(query, final_candidate_pids, bm25_all_scores, state)
         
         elif self.config.reranker_type == 'mamba':
             final_results = self._rerank_with_mamba_style(query, final_candidate_pids, bm25_all_scores)
-            
-        elif self.config.reranker_type == 'none':
-            print(f"跳过精排，共 {len(final_candidate_pids)} 个候选，仅使用BM25分数排序...")
             bm25_scores_map = {self.bm25_id_map[i]: score for i, score in enumerate(bm25_all_scores)}
             final_results = [
                 (pid, bm25_scores_map.get(pid, 0.0),
